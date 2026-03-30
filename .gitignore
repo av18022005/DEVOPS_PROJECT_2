@@ -10,6 +10,9 @@ logs/
 models/
 reports/
 
+# Ignore dataset images (VERY IMPORTANT)
+data/HAM10000/images/
+
 # System files
 .DS_Store
 Thumbs.db
