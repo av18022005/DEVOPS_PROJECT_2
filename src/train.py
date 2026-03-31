@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import os  # ✅ MISSING IMPORT (important)
 
 from src.evaluate import evaluate
 from src.trust_gate import check_trust
@@ -58,14 +59,17 @@ def run_pipeline(model, train_loader, test_loader, device="cpu"):
         results["uncertainty"]
     )
 
+    # ✅ SAVE DECISION FOR JENKINS (VERY IMPORTANT)
+    os.makedirs("logs", exist_ok=True)
+    with open("logs/decision.txt", "w") as f:
+        f.write(decision)
+
     # 🚀 DEPLOYMENT
     if decision == "DEPLOY":
 
-        # ✅ Save model correctly
         os.makedirs("models", exist_ok=True)
         torch.save(model.state_dict(), MODEL_PATH)
 
-        # ✅ Save version with SAME path
         save_version(results, MODEL_PATH)
 
         print("✅ Model Deployed Successfully")
