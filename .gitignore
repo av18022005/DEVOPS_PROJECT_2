@@ -1,18 +1,16 @@
-# Virtual environment
-.venv/
+# Ignore all data
+data/*
 
-# Python cache
+# ✅ Allow small dataset
+!data/HAM10000_small/
+
+# Ignore models except final one
+models/*
+!models/model.pth
+
+# Python
 __pycache__/
 *.pyc
 
-# Large datasets
-data/
-
-# Outputs
-logs/
-models/
-reports/
-
-# System files
-.DS_Store
-Thumbs.db
+.venv/
+venv/

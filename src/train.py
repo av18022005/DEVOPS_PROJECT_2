@@ -1,80 +1,58 @@
 import torch
 import torch.nn as nn
-import os  # ✅ MISSING IMPORT (important)
+import torch.optim as optim
 
-from src.evaluate import evaluate
-from src.trust_gate import check_trust
-from src.versioning import save_version
 from src.config import *
+from src.model import MultimodalFairNet
+from src.data_loader import get_loaders
+from src.preprocess import *
+from src.utils import ensure_dirs
 
+def train():
 
-def train_model(model, train_loader, device):
+    ensure_dirs()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+    # Load and preprocess data
+    meta = load_metadata(CSV_PATH)
+    meta = add_image_paths(meta, DATA_DIR + "/images")
+
+    train_df, test_df = split_data(meta)
+    train_df, test_df = encode_features(train_df, test_df)
+
+    train_loader, _ = get_loaders(train_df, test_df, BATCH_SIZE)
+
+    # Model
+    model = MultimodalFairNet().to(DEVICE)
+
     criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()),
+        lr=LR
+    )
 
+    # Training loop
     model.train()
-
     for epoch in range(EPOCHS):
         total_loss = 0
 
-        for imgs, metas, labels, skins in train_loader:
-            imgs = imgs.to(device)
-            metas = metas.to(device)
-            labels = labels.to(device)
+        for imgs, meta, labels, _ in train_loader:
+            imgs, meta, labels = imgs.to(DEVICE), meta.to(DEVICE), labels.to(DEVICE)
 
             optimizer.zero_grad()
 
-            logits, _, _, _ = model(imgs, metas)
+            outputs, _, _, _ = model(imgs, meta)
+            loss = criterion(outputs, labels)
 
-            loss = criterion(logits, labels)
             loss.backward()
-
             optimizer.step()
 
             total_loss += loss.item()
 
-        print(f"Epoch {epoch+1}/{EPOCHS} - Loss: {total_loss:.4f}")
+        print(f"Epoch {epoch+1}/{EPOCHS}, Loss: {total_loss:.4f}")
 
-    return model
+    # Save model
+    torch.save(model.state_dict(), MODEL_PATH)
+    print("✅ Model saved at:", MODEL_PATH)
 
-
-def run_pipeline(model, train_loader, test_loader, device="cpu"):
-
-    # 🏋️ TRAIN
-    print("\n🏋️ Training Model...")
-    model = train_model(model, train_loader, device)
-
-    # 🔍 EVALUATE
-    print("\n🔍 Evaluating Model...")
-    results = evaluate(model, test_loader, device)
-
-    print("\n📊 Evaluation Results:")
-    print(results)
-
-    # 🧠 TRUST GATE
-    decision = check_trust(
-        results["accuracy"],
-        results["fairness_gap"],
-        results["uncertainty"]
-    )
-
-    # ✅ SAVE DECISION FOR JENKINS (VERY IMPORTANT)
-    os.makedirs("logs", exist_ok=True)
-    with open("logs/decision.txt", "w") as f:
-        f.write(decision)
-
-    # 🚀 DEPLOYMENT
-    if decision == "DEPLOY":
-
-        os.makedirs("models", exist_ok=True)
-        torch.save(model.state_dict(), MODEL_PATH)
-
-        save_version(results, MODEL_PATH)
-
-        print("✅ Model Deployed Successfully")
-
-    else:
-        print("❌ Model Rejected due to Trust Constraints")
-
-    return decision
+if __name__ == "__main__":
+    train()

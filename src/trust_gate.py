@@ -1,5 +1,5 @@
 # trust_gate.py
-from config import *
+from src.config import *
 
 def check_trust(acc, gap, uncertainty):
 
