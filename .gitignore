@@ -1,11 +1,18 @@
-# Ignore models except final one
-models/*
-!models/*.pth
-!models/current_model.txt
+# Ignore dataset
+data/
 
-# Python
+# Ignore models
+models/*
+!models/model.pth
+
+# Python cache
 __pycache__/
 *.pyc
 
+# Virtual environments
 .venv/
 venv/
+
+# Logs & outputs
+logs/
+reports/
