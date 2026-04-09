@@ -4,7 +4,8 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 DATA_DIR = "data/HAM10000"
 CSV_PATH = CSV_PATH = "data/HAM10000/metadata.csv"
 
-MODEL_PATH = "models/model.pth"
+MODEL_DIR = "models"
+CURRENT_MODEL_FILE = "models/current_model.txt"
 METRICS_PATH = "reports/evaluation.json"
 
 BATCH_SIZE = 32

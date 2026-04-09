@@ -1,12 +1,13 @@
-# versioning.py
 import json
 import os
 
-def save_version(results, model_path):
-    version_file = "logs/versions.json"
+VERSION_FILE = "logs/versions.json"
 
-    if os.path.exists(version_file):
-        with open(version_file, "r") as f:
+
+def save_version(results, model_path):
+
+    if os.path.exists(VERSION_FILE):
+        with open(VERSION_FILE, "r") as f:
             versions = json.load(f)
     else:
         versions = []
@@ -21,18 +22,18 @@ def save_version(results, model_path):
 
     versions.append(entry)
 
-    with open(version_file, "w") as f:
+    with open(VERSION_FILE, "w") as f:
         json.dump(versions, f, indent=4)
 
     return version_id
 
 
-def compare_versions():
-    if not os.path.exists("logs/versions.json"):
+def get_best_model():
+    if not os.path.exists(VERSION_FILE):
         return None
 
-    with open("logs/versions.json") as f:
+    with open(VERSION_FILE) as f:
         versions = json.load(f)
 
     best = max(versions, key=lambda x: x["metrics"]["accuracy"])
-    return best
+    return best["model_path"]

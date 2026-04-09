@@ -1,6 +1,7 @@
 # Ignore models except final one
 models/*
-!models/model.pth
+!models/*.pth
+!models/current_model.txt
 
 # Python
 __pycache__/
